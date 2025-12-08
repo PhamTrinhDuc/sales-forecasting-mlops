@@ -1,0 +1,42 @@
+# Bỏ qua tất cả file tạm
+*~
+*.tmp
+*.pyc
+__pycache__/
+
+# Bỏ qua folder dev
+dev_dags/
+
+# Bỏ qua DAG mẫu
+example_*.py
+
+# Bỏ qua file đang viết dở
+draft_*.py
+
+.env
+.env.dev
+docs
+.gitignore
+.git 
+notebooks
+data
+.venv
+
+# Ignore test files
+test_*.py
+*_test.py
+tests/
+
+# Ignore IDE / editor files
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# Ignore Docker / build artifacts
+Dockerfile.*
+docker-compose*.yml
+
+# Ignore Airflow local DB/logs (nếu có trong dags/)
+airflow.db
+logs/
