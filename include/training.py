@@ -1,6 +1,7 @@
 import os
 import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', )))
+import time
 import numpy as np
 import pandas as pd
 from datetime import datetime
@@ -523,23 +524,43 @@ class ModelTrainer:
       dst_path = self.data_config['artifact_path']
       bucket_name = self.data_config['artifact_bucket']
       artifact_dirs = self.mlflow_manager.download_artifacts_from_s3(run_id=run_id, dst_path=dst_path)
+      dt = datetime.fromtimestamp(time.time())
+      current_time = dt.strftime("%d-%m-%Y")
+
       try: 
         for root, dirs, files in os.walk(artifact_dirs): 
           for file in files: 
             local_path = os.path.join(root, file)
             relative_path = os.path.relpath(local_path, artifact_dirs)
-            s3_key = f"{run_id[:2]}/{run_id[2:4]}/{run_id}/artifacts/{relative_path}"
+            s3_key = f"{current_time}/{run_id}/artifacts/{relative_path}"
             self.s3_manager.upload_file(file_path=local_path, bucket_name=bucket_name, s3_key=s3_key)
         logger.info(f"Upload mlflow artifacts to s3 sucessfully!")
       except Exception as e: 
         logger.error(f"Failed upload mlflow artifacts to s3. {str(e)}")
 
+
+      # 7. Lưu encoder, scalers, feature_cols vào mlflow 
+      self.save_artifacts(run_id=run_id)
+      logger.info("Save preprocesor (encoder, scaler, feature_cols) to mlflow sucessfully")
+
       return results
-    
+
     except Exception as e: 
       logger.error(f"Error during process callback. {str(e)}")
 
+  def save_artifacts(self, run_id: str): 
+    import joblib
+    dst_path = os.path.join(self.data_config['artifact_path'], "preprocess") 
+    
+    os.makedirs(dst_path, exist_ok=True)
+
+    joblib.dump(self.scalers, os.path.join(dst_path, "scalers.pkl"))
+    joblib.dump(self.encoders, os.path.join(dst_path, "encoders.pkl"))
+    joblib.dump(self.feature_cols, os.path.join(dst_path, "feature_cols.pkl"))
+
+    self.mlflow_manager.log_artifacts(run_id=run_id, artifact_path=dst_path)
   
+
 if __name__ == "__main__": 
 
   from dotenv import load_dotenv
