@@ -6,14 +6,17 @@ from io import BytesIO
 from loguru import logger
 from datetime import datetime, timedelta
 from airflow.decorators import dag, task
-from airflow.providers.standard.operators.bash import BashOperator
+# from airflow.providers.standard.operators.bash import BashOperator
 from include.data_generator import RealisticSalesDataGenerator
 from include.utils.helpers import load_config
 from include.utils.s3_utils import S3Manager
-from include.ml_models import ModelTrainer
+from include.utils.mlflow_utils import MLFlowManager
+from include.training import ModelTrainer
 
 config = load_config('/usr/local/airflow/include/config.yaml')
 s3_manager = S3Manager(config_app=config)
+mlflow_manager = MLFlowManager(app_config=config)
+trainer = ModelTrainer(app_config=config)
 
 
 default_args = {
@@ -203,12 +206,10 @@ def sales_forecast_training():
       "is_holiday": "first", # binary lag -> giá trị duy nhất 
     }).reset_index()
 
-    daily_store_sales['date'] = pd.to_datetime(daily_store_sales['date'])
     return daily_store_sales
     
   @task()
   def train_model_task(daily_store_sales: pd.DataFrame): 
-    trainer = ModelTrainer()
     train_df, val_df, test_df = trainer.prepare_data(
       daily_store_sales, 
       target_col = "sales",
@@ -217,15 +218,71 @@ def sales_forecast_training():
       categorical_cols = ['store_id'],
     )
 
-    results = trainer.train_all_models(train_df, val_df, test_df, target_col="sales", use_optuna=True)
+    results = trainer.train(train_df, val_df, test_df, target_col="sales", use_optuna=True)
 
+    serializable_results = {}
+    for model_name, result in results.items(): 
+      if "metrics" in result: 
+        serializable_results[model_name] = {"metrics": result.get("metrics", {})}
 
+    return {
+      "training_results": serializable_results, 
+      "mlflow_run_id": results['run_id']
+    }
+  
+  @task
+  def evaluate_models_task(training_results: dict): 
+    results = training_results['training_results']
+
+    best_rmse = float("inf")
+    best_model_name = None
+
+    for model_name, result in results.items(): 
+      metric = result['metrics']
+      if metric['rmse'] < best_rmse: # càng nhỏ càng tốt
+        best_rmse = metric['rmse']
+        best_model_name = model_name
+    best_run = mlflow_manager.get_best_model(metric="rmse", ascending=True)
+  
+    return {
+      "best_model": best_model_name, 
+      "best_run_id": best_run['run_id']
+    }
+   
+  @task
+  def register_best_model_task(evaluate_results: dict): 
+    model_name = evaluate_results['best_model']
+    run_id = evaluate_results['best_run_id']
+
+    results = {"model_name": model_name}
+    try: 
+      version = mlflow_manager.register_model(run_id=run_id, model_name=model_name)
+      results['version'] = version
+      logger.info(f"Registed model {model_name} version {version} sucessfully")
+      return results
+    except Exception as e: 
+      logger.error(f"Register model failed. {str(e)}")
+  
+  @task
+  def transition_model_task(register_result: str): 
+    version = register_result['version']
+    model_name = register_result['model_name']
+
+    try: 
+      mlflow_manager.transition_model_stage(model_name=model_name, version=version, stage="Production")
+      logger.info(f"Transition model {model_name} v{version} to Production sucessfully")
+    except Exception as e: 
+      logger.error(f"Error during transition model {model_name} v{version} to Production. {str(e)}")
+  
+    
   # Invoke the DAG
   data_info = extract_data_task()
   validation_summary = validate_data_task(data_info=data_info)
   daily_store_sales = transform_data_task(data_info=data_info)
-  results = train_model_task(daily_store_sales=daily_store_sales)
-
+  train_results = train_model_task(daily_store_sales=daily_store_sales)
+  evaluate_results = evaluate_models_task(training_results=train_results)
+  register_results = register_best_model_task(evaluate_results=evaluate_results)
+  transition_model_task(register_result=register_results)
 
 # Instantiate the DAG
 sales_forecast_training_dag = sales_forecast_training()
