@@ -110,11 +110,11 @@ class FeatureEngineer:
     
     return df
 
-
-  def handle_missing_values(self, df: pd.DataFrame) -> pd.DataFrame: 
+  def handle_missing_values(self, df: pd.DataFrame, target_col: str) -> pd.DataFrame: 
     df = df.copy()
     columns = df.select_dtypes(np.number).columns
 
+    # fill dữ liệu thiếu cho các cột rolling và lag bị missing khi tạo
     for col in columns: 
       if df[col].isnull().any(): 
         if "lag" in col or "rolling" in col: 
@@ -122,6 +122,8 @@ class FeatureEngineer:
         else: 
           df[col] = df[col].fillna(df[col].mean())
     
+    # xóa các hàng missing ở target col
+    df = df.dropna(subset=[target_col])
     return df
 
   def create_all_features(self, 
@@ -190,7 +192,7 @@ class FeatureEngineer:
     if categorical_cols:
       df = self.create_interaction_features(df=df, categorical_cols=categorical_cols)
     # 7. 
-    df = self.handle_missing_values(df=df)
+    df = self.handle_missing_values(df=df, target_col=target_col)
 
     logger.info(f"Feature engineering complete. Total features: {len(df.columns)}")
     return df
@@ -205,16 +207,17 @@ if __name__ == "__main__":
   sale_processed = pd.read_csv(processed_csv_path)
 
   feature_engineer = FeatureEngineer(app_config=app_config)
-  df = feature_engineer.create_date_features(df=sale_processed, date_col='date')
-  df = feature_engineer.create_lag_feature(df=df, targer_col='sales', group_cols=None)
-  df = feature_engineer.create_rolling_feature(df=df, target_col='sales', group_cols=None)
-  df = feature_engineer.create_cyclical_features(df=df, date_col="date")
-  df = feature_engineer.create_interaction_features(df=df, categorical_cols=["date", "store_id"])
-  df = feature_engineer.handle_missing_values(df=df)
+  # df = feature_engineer.create_date_features(df=sale_processed, date_col='date')
+  # df = feature_engineer.create_lag_feature(df=df, targer_col='sales', group_cols=None)
+  # df = feature_engineer.create_rolling_feature(df=df, target_col='sales', group_cols=None)
+  # df = feature_engineer.create_cyclical_features(df=df, date_col="date")
+  # df = feature_engineer.create_interaction_features(df=df, categorical_cols=["date", "store_id"])
+  # df = feature_engineer.handle_missing_values(df=df)
 
-  df = feature_engineer.create_all_features(df=df, 
+  df = feature_engineer.create_all_features(df=sale_processed, 
                                             target_col="sales", 
                                             date_col="date", 
                                             group_cols=["store_id"], 
-                                            categorical_cols=['store_id'])
+                                            categorical_cols=None)
+  df.to_csv(processed_csv_path)
   print(df.columns.tolist())
