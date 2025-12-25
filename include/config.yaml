@@ -17,9 +17,12 @@ dataset:
     - 'product_id'
     - 'quantity_sold'
     - 'revenue'
+  target_col: 'sales'
+  date_col: 'date'
+  artifact_path: "artifacts"
 
 features: 
-  data_features: 
+  date_features: 
     - "year"
     - "month"
     - "day"
@@ -41,3 +44,63 @@ features:
   rolling_features: 
     windows: [3, 7, 14, 21, 30]
     funtions: ["mean", "std", "min", "max", "median"]
+
+validation: 
+  required_columns:
+    - "date"
+    - "sales"
+    - "store_id"
+    - "product_id"
+  data_types: 
+    - date: "datetime64[ns]"
+    - sales: "float64"
+    - store_id: "object"
+    - product_id: "object"
+  value_ranges:
+    sales:
+      min: 0
+      max: 1000000
+
+training: 
+  optuna_trials: 30 
+  train_size: 0.7 
+  val_size: 0.15
+  cv_folds: 5
+  metrics: 
+    - "rmse"
+    - "mae"
+    - "mape"
+    - "r2" 
+  early_stop: 50
+  
+models: 
+  xgboost: 
+    params: 
+      n_estimators: 100
+      max_depth: 6
+      learning_rate: 0.1
+      objective: "reg:squarederror"
+      random_state: 42
+
+  lightgbm:
+    params: 
+      n_estimators: 100
+      max_depth: 6
+      learning_rate: 0.1
+      objective: "regression"
+      random_state: 42
+
+  prophet:
+    enabled: false  # Set to true if Prophet is working in your environment
+    params:
+      seasonality_mode: "multiplicative"
+      changepoint_prior_scale: 0.05
+      seasonality_prior_scale: 10
+      yearly_seasonality: true
+      weekly_seasonality: true
+      daily_seasonality: false
+  
+mlflow: 
+  tracking_uri: "http://mlflow:5001"
+  experiment_name: "sale_forecasting"
+  registry_name: "sale_forecast_models"
