@@ -67,14 +67,12 @@ class S3Manager:
           f"Not all data types found in bucket {bucket_name}. Expected: {data_types}, Found: {object_types}"
         )
 
-
     def upload_file(self, file_path: str, bucket_name: str, s3_key: str):
       try:
         self.s3_client.upload_file(file_path, bucket_name, s3_key)
       except Exception as e:
         logger.error(f"Failed to upload {file_path} to {bucket_name}/{s3_key}: {e}")
         raise e
-
 
     def upload_folders(self, folder_path: str, bucket_name: str): 
 
