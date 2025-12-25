@@ -106,6 +106,9 @@ class MLFlowManager:
     except Exception as e: 
       logger.error(f"failed to log model {model_name}: {e}")
 
+  def log_artifacts(self, run_id: str, artifact_path: str): 
+    self.client.log_artifacts(run_id, artifact_path)
+  
   def download_artifacts_from_s3(self, run_id: str, dst_path: str="artifacts"): 
     artifacts_dir = self.client.download_artifacts(run_id=run_id, path=".", dst_path=dst_path)
     return artifacts_dir
