@@ -6,4 +6,9 @@ logs/
 .venv
 airflow.db
 airflow.cfg
-__pycache__
+__pycache__/
+
+
+docs
+Dockerfile
+artifacts
