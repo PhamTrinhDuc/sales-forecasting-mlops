@@ -212,10 +212,10 @@ def sales_forecast_training():
   def train_model_task(daily_store_sales: pd.DataFrame): 
     train_df, val_df, test_df = trainer.prepare_data(
       daily_store_sales, 
-      target_col = "sales",
-      date_col = "date",
-      group_cols = ['store_id'], 
-      categorical_cols = ['store_id'],
+      target_col="sales",
+      date_col="date",
+      group_cols=['store_id'], 
+      categorical_cols=['store_id'],
     )
 
     results = trainer.train(train_df, val_df, test_df, target_col="sales", use_optuna=True)

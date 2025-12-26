@@ -504,11 +504,11 @@ class ModelTrainer:
         "ensemble": ensemble_results
       }
 
-      import json
-      test_pred_json = json.dumps({k: v.tolist() for k, v in test_pred.items()})
-      with open('test_predictions.json', 'w') as f:
-        f.write(test_pred_json)
-      logger.info("Saved test predictions to JSON")
+      # import json
+      # test_pred_json = json.dumps({k: v.tolist() for k, v in test_pred.items()})
+      # with open('test_predictions.json', 'w') as f:
+      #   f.write(test_pred_json)
+      # logger.info("Saved test predictions to JSON")
       
       diagnosis = diagnose_model_performance(train_df=train_df, 
                                              val_df=val_df, 
@@ -539,7 +539,7 @@ class ModelTrainer:
         logger.error(f"Failed upload mlflow artifacts to s3. {str(e)}")
 
 
-      # 7. Lưu encoder, scalers, feature_cols vào mlflow 
+      # 7. Lưu encoder, scalers, feature_cols vào minio 
       self.save_artifacts(run_id=run_id)
       logger.info("Save preprocesor (encoder, scaler, feature_cols) to mlflow sucessfully")
 
