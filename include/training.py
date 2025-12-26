@@ -128,12 +128,12 @@ class ModelTrainer:
     x_val_scaled = scaler.transform(X_val)
     x_test_scaled = scaler.transform(X_test)
 
-    self.scalers['standard'] = scaler
-    self.feature_cols = feature_cols
-
     X_train_scaled = pd.DataFrame(data=x_train_scaled, columns=feature_cols, index=X_train.index)
     X_val_scaled = pd.DataFrame(data=x_val_scaled, columns=feature_cols, index=X_val.index)
     X_test_scaled = pd.DataFrame(data=x_test_scaled, columns=feature_cols, index=X_test.index)
+
+    self.scalers['standard'] = scaler
+    self.feature_cols = feature_cols
 
     return (
       X_train_scaled, 
@@ -534,19 +534,23 @@ class ModelTrainer:
             relative_path = os.path.relpath(local_path, artifact_dirs)
             s3_key = f"{current_time}/{run_id}/artifacts/{relative_path}"
             self.s3_manager.upload_file(file_path=local_path, bucket_name=bucket_name, s3_key=s3_key)
+            
         logger.info(f"Upload mlflow artifacts to s3 sucessfully!")
+
+        # 7. Lưu encoder, scalers, feature_cols vào minio 
+        self.save_artifacts(run_id=run_id)
+        logger.info("Save preprocesor (encoder, scaler, feature_cols) to mlflow sucessfully")
+
+        self.mlflow_manager.end_run(status="FINISHED")
       except Exception as e: 
+        self.mlflow_manager.end_run(status="FAILED")
         logger.error(f"Failed upload mlflow artifacts to s3. {str(e)}")
-
-
-      # 7. Lưu encoder, scalers, feature_cols vào minio 
-      self.save_artifacts(run_id=run_id)
-      logger.info("Save preprocesor (encoder, scaler, feature_cols) to mlflow sucessfully")
 
       return results
 
     except Exception as e: 
       logger.error(f"Error during process callback. {str(e)}")
+      raise ValueError(f"Failed training model. {str(e)}")
 
   def save_artifacts(self, run_id: str): 
     import joblib
