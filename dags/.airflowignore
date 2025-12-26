@@ -21,6 +21,8 @@ docs
 notebooks
 data
 .venv
+docs 
+data
 
 # Ignore test files
 test_*.py

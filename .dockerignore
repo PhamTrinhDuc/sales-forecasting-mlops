@@ -8,7 +8,7 @@ airflow.db
 airflow.cfg
 __pycache__/
 
-
+data
 docs
 Dockerfile
 artifacts
