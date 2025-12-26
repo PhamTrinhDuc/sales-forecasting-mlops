@@ -77,11 +77,11 @@ class FeatureEngineer:
               # Dòng 2 (120): cửa sổ [100, 120] (do min_periods=1) → mean = 110.0
               # Dòng 3 (130): cửa sổ [100, 120, 130] → mean = 116.67 
           df[col_name] = df.groupby(group_cols)[target_col].transform(
-            func=lambda x: x.rolling(window, min_periods=1).agg(func) 
+            func=lambda x: x.shift(1).rolling(window, min_periods=1).agg(func) 
           )
         else: 
           df[col_name] = df[target_col].transform(
-            func=lambda x: x.rolling(window, min_periods=1).agg(func)
+            func=lambda x: x.shift(1).rolling(window, min_periods=1).agg(func)
           )
       logger.info(f"Created rolling features: {rolling_windows} - for funcs: {rolling_funcs}")
       return df
@@ -119,8 +119,9 @@ class FeatureEngineer:
       if df[col].isnull().any(): 
         if "lag" in col or "rolling" in col: 
           df[col] = df[col].ffill().bfill()
-        else: 
-          df[col] = df[col].fillna(df[col].mean())
+    
+    # fill nhưng giá NaN ở cột has_promotion = 0 (không khuyến mãi)
+    df['has_promotion'] = df['has_promotion'].fillna(0).astype(int)
     
     # xóa các hàng missing ở target col
     df = df.dropna(subset=[target_col])
