@@ -158,7 +158,7 @@ class MLFlowManager:
     artifacts_dir = self.client.download_artifacts(run_id=run_id, path=path, dst_path=dst_path)
     return artifacts_dir
 
-  def get_best_model(self, metric="rmse", ascending: bool=True): 
+  def get_best_run(self, metric="rmse", ascending: bool=True): 
     experiment = self.client.get_experiment_by_name(self.experiment_name)
 
     runs = self.client.search_runs(
@@ -174,7 +174,7 @@ class MLFlowManager:
       "experiment_id": experiment.experiment_id,
       "run_id": best_run.info.run_id, 
       "metrics": best_run.data.metrics, 
-      "params": best_run.data.params
+      "params": best_run.data.params, 
     }
   
   def register_model(self, run_id: str, model_name: str) -> str: 
@@ -223,7 +223,7 @@ class MLFlowManager:
 
     except Exception as e: 
       logger.warning(f"Get latest model failed. Switch to best model. {str(e)}")
-      best_model = self.get_best_model()
+      best_model = self.get_best_run()
       model_uri = self.model_uri.format(experiment_id=self.experiment_id, 
                                         run_id=best_model['run_id'], 
                                         model_name=model_name)
@@ -234,9 +234,15 @@ class MLFlowManager:
         'model_uri': model_uri
       }
   
-  def end_run(self, run_id: str): 
-    pass
-
+  def end_run(self, status: str): 
+    try:
+      run = mlflow.active_run()
+      run_id = run.info.run_id
+      mlflow.end_run(status=status)
+      logger.info("MLflow ended")
+    except Exception as e: 
+      mlflow.end_run(status=status)
+      logger.error(f"Failed Mlflow ended. {str(e)}")
 
 if __name__ == "__main__": 
   from dotenv import load_dotenv
@@ -253,8 +259,8 @@ if __name__ == "__main__":
   # dirs = manager.download_artifacts(run_id="6589e6ae9ddb4758a707cb39bd127c37")
   # print(dirs)
 
-  # best_model = manager.get_best_model()
-  # print(best_model)
+  best_model = manager.get_best_run()
+  print(best_model)
 
   # version = manager.register_model(run_id=RUN_ID, model_name="lightgbm")
   # manager.transition_model_stage(model_name="lightgbm", version=version, stage="production")
@@ -268,8 +274,8 @@ if __name__ == "__main__":
 
   # print(model)
 
-  model = joblib.load("/home/ducpham/workspace/Sales-Forecasting-Mlops/include/artifacts/models/xgboost/xgboost_model.pkl")
-  model_name = "xgboost"
-  run_id = "064fdc854a404f6683aedbc9e10b0446"
+  # model = joblib.load("/home/ducpham/workspace/Sales-Forecasting-Mlops/include/artifacts/models/xgboost/xgboost_model.pkl")
+  # model_name = "xgboost"
+  # run_id = "064fdc854a404f6683aedbc9e10b0446"
 
-  manager.log_model(model=model, model_name=model_name, run_id=run_id)
+  # manager.log_model(model=model, model_name=model_name, run_id=run_id)
