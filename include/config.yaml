@@ -104,3 +104,5 @@ mlflow:
   tracking_uri: "http://mlflow:5001"
   experiment_name: "sale_forecasting"
   registry_name: "sale_forecast_models"
+  model_uri: "mlflow-artifacts:/{experiment_id}/{run_id}/artifacts/models/{model_name}"
+  preprocesor_uri: "mlflow-artifacts:/{experiment_id}/{run_id}/artifacts/{artifact_name}.pkl"
