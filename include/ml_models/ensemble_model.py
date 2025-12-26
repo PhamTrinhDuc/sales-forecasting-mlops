@@ -23,10 +23,10 @@ class EnsembleModel:
     weights = []
 
     for model_name, model in self.models.items(): 
-      if self.ensemble_weights[model] > 0: 
+      if self.ensemble_weights[model_name] > 0: 
         pred = model.predict(X)
         predictions.append(pred)
-        weights.append(self.ensemble_weights[model])
+        weights.append(self.ensemble_weights[model_name])
     
     if not predictions: 
       raise ValueError("No models avaiable for prediction")
@@ -36,6 +36,7 @@ class EnsembleModel:
 
     ensem_pred = np.average(predictions, axis=0, weights=weights)
     return ensem_pred
+  
   def get_params(self): 
     return {
       'model': self.models, 
