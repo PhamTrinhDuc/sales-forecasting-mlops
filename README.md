@@ -53,7 +53,6 @@ Dự án này xây dựng một hệ thống MLOps end-to-end để dự đoán 
 ### Model Training
 - ✅ Hỗ trợ nhiều mô hình: XGBoost, LightGBM, Ensemble
 - ✅ Hyperparameter tuning với Optuna (30 trials mặc định)
-- ✅ Cross-validation với 5 folds
 - ✅ Early stopping để tránh overfitting
 - ✅ Đánh giá với nhiều metrics: RMSE, MAE, MAPE, R²
 
@@ -62,7 +61,6 @@ Dự án này xây dựng một hệ thống MLOps end-to-end để dự đoán 
 - ✅ Model versioning và registry
 - ✅ Artifact storage trên S3
 - ✅ Automated pipeline với Airflow (schedule @weekly)
-- ✅ Model comparison và selection
 
 ### Model Serving
 - ✅ FastAPI REST API
@@ -553,48 +551,6 @@ include/logs/
 # MLflow logs
 docker logs <mlflow-container>
 ```
-
-## 📝 Development
-
-### Running Tests
-
-```bash
-# Run all tests
-pytest
-
-# Run specific test
-pytest tests/test_feature_pipeline.py
-
-# With coverage
-pytest --cov=include tests/
-```
-
-### Adding New Features
-
-1. **Thêm date feature mới**: Chỉnh sửa `include/feature_pipeline.py`
-2. **Thêm model mới**: Tạo class trong `include/ml_models/`
-3. **Thêm data source**: Cập nhật `data_loader.py` và `config.yaml`
-
-### Code Style
-
-```bash
-# Format code
-black include/ dags/
-
-# Lint
-flake8 include/ dags/
-
-# Type checking
-mypy include/
-```
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
 
 ## 📄 License
 
