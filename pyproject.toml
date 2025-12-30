@@ -16,9 +16,11 @@ dependencies = [
     "numpy==1.26.4",
     "optuna>=4.6.0",
     "pandas>=2.3.3",
+    "plotly>=6.5.0",
     "pyarrow>=4.0.0,<15.0.0",
     "pytest>=9.0.2",
     "scikit-learn>=1.7.2",
+    "streamlit>=1.52.2",
     "uvicorn>=0.38.0",
     "xgboost-cpu>=3.1.2",
 ]
