@@ -2,10 +2,11 @@ import os
 import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', )))
 import joblib
+import asyncio
 import pandas as pd
 import numpy as np
 from collections import defaultdict
-from typing import Optional, Dict, Any
+from typing import List
 from datetime import datetime
 from loguru import logger
 from utils import load_config, MLFlowManager, S3Manager
@@ -147,29 +148,26 @@ class ModelInferenceService:
     sales_data = sales_data[sales_data['store_id'] == store_id].sort_values('date', ascending=False).head(days)
     return sales_data
 
-  def predict_single(self, 
-                     store_id: str, 
-                     date: str, 
-                     additional_features: Optional[Dict[str, Any]]=None): 
+  def predict_single(self, request: RequestModel): 
     """
     Predict với historical data để tính lag/rolling features
     """
     # 1. Load historical data (30 ngày trước)
     historical_df = self._get_historical_data(
-      store_id=store_id,
-      end_date=date,
+      store_id=request.store_id,
+      end_date=request.date,
       days=30
     )
     
     # 2. Thêm prediction point
     prediction_data = {
-      "store_id": store_id, 
-      "date": pd.to_datetime(date), 
+      "store_id": request.store_id, 
+      "date": pd.to_datetime(request.date), 
       "sales": 0  # dummy value cho feature engineering
     }
     
-    if additional_features: 
-      for key, value in additional_features.items(): 
+    if request.additional_features: 
+      for key, value in request.additional_features.items(): 
         prediction_data[key] = value
     
     prediction_df = pd.DataFrame([prediction_data])
@@ -194,24 +192,35 @@ class ModelInferenceService:
     intervals = self._generate_confidence_intervals(predictions=predictions)
 
     return ResponseModel(
-      store_id=store_id, 
-      date=date, 
+      store_id=request.store_id, 
+      date=request.date, 
       predictions=predictions, 
       intervals=intervals,
       model_version="v1", 
       prediction_timestamp=datetime.now().strftime('%Y-%m-%d/%H-%M-%S')
     )
 
+  async def async_predict_single(self, request: RequestModel): 
+    loop = asyncio.get_event_loop()
+    return await loop.run_in_executor(None, self.predict_single, request)
+  
+  async def async_predict_batch(self,requests: List[RequestModel]) -> List[ResponseModel]: 
+    tasks = [self.async_predict_single(req) for req in requests ]
+    results = await asyncio.gather(*tasks)
+    return results
+
 
 if __name__ == "__main__": 
   from dotenv import load_dotenv
-  load_dotenv(".env.dev")
+  load_dotenv("../.env.dev")
 
   service = ModelInferenceService()
   service.load_models()
 
-  predictions = service.predict_single(store_id="store_001", 
-                                       date="2026-01-01", 
-                                       additional_features={"has_promotion": 1})
+  request = RequestModel(
+    store_id="store_001", 
+    date="2026-01-01"
+  )
+  predictions = service.predict_single(request=request)
   
   print(f"Predicted sales: {predictions}")
