@@ -610,4 +610,4 @@ This project is licensed under the MIT License.
 ---
 
 **📧 Contact**: duc78240@gmail.com  
-**🔗 Project Link**: [https://github.com/yourusername/Sales-Forecasting-Mlops](https://github.com/yourusername/Sales-Forecasting-Mlops)
+**🔗 Project Link**: [https://github.com/PhamTrinhDuc/Sales-Forecasting-Mlops](https://github.com/PhamTrinhDuc/Sales-Forecasting-Mlops)
