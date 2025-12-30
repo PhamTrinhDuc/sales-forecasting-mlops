@@ -19,6 +19,7 @@ Hệ thống dự đoán doanh số bán hàng với MLOps pipeline hoàn chỉn
 - [Pipeline](#-pipeline)
 - [Mô hình ML](#-mô-hình-ml)
 - [API Documentation](#-api-documentation)
+- [Frontend](#️-frontend-ui)
 - [Monitoring](#-monitoring)
 - [Troubleshooting](#-troubleshooting)
 
@@ -67,6 +68,7 @@ Dự án này xây dựng một hệ thống MLOps end-to-end để dự đoán 
 - ✅ Single và batch prediction
 - ✅ Health check endpoint
 - ✅ Async inference
+- ✅ Streamlit frontend UI
 
 ## 🛠️ Công nghệ sử dụng
 
@@ -79,7 +81,9 @@ Dự án này xây dựng một hệ thống MLOps end-to-end để dự đoán 
 | **ML Models** | XGBoost, LightGBM | - |
 | **Optimization** | Optuna | 4.6.0+ |
 | **API Framework** | FastAPI | 0.117.1+ |
+| **Frontend** | Streamlit | 1.40.2+ |
 | **Data Processing** | Pandas, NumPy | - |
+| **Visualization** | Plotly | 5.24.1+ |
 | **Language** | Python | 3.12+ |
 
 ## 🚀 Cài đặt
@@ -454,6 +458,42 @@ Dự đoán batch cho nhiều stores/ngày
   }
 ]
 ```
+
+
+## 🖥️ Frontend UI
+
+Web-based interface để thực hiện sales forecasting dễ dàng
+
+### Features
+- **API Connection**: Tự động kết nối và kiểm tra health của backend API
+- **Simple Input**: Chỉ cần nhập Store ID, Start Date và Forecast Days
+- **Visualization**: Biểu đồ interactive với confidence intervals (95%)
+- **Export**: Download kết quả dự đoán dưới dạng CSV
+
+### UI
+
+**Giao diện chính**
+![UI 1](images/ui_1.png)
+
+**Kết quả dự đoán**
+![UI 2](images/ui_2.png)
+
+**Kết quả dự đoán**
+![UI 3](images/ui_3.png)
+
+### Quick Start
+
+```bash
+# 1. Start backend API
+cd include/model_serving
+uvicorn controller:app --host 0.0.0.0 --port 8000 --reload
+
+# 2. Start frontend
+cd frontend
+streamlit run main.py
+```
+
+Truy cập UI tại: [http://localhost:8501](http://localhost:8501)
 
 ## 📈 Monitoring
 
