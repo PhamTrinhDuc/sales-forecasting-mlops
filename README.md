@@ -602,11 +602,11 @@ This project is licensed under the MIT License.
 
 ## 🙏 Acknowledgments
 
-- Apache Airflow team
-- MLflow team
-- XGBoost và LightGBM contributors
-- Optuna team
-
+- Apache Airflow document
+- MLflow document
+- XGBoost và LightGBM model
+- Optuna document
+- Instructor: [CodeWithYu Youtuber](https://youtu.be/q74qym22vqA?si=O_LfIQYANC_llNfk)
 ---
 
 **📧 Contact**: duc78240@gmail.com  
